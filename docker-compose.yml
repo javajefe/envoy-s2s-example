@@ -42,7 +42,7 @@ services:
     networks:
       servicepod1:
         aliases:
-          - service1
+          - local-service
 
   local-envoy2:
     build:
@@ -69,7 +69,7 @@ services:
     networks:
       servicepod2:
         aliases:
-          - service2
+          - local-service
 
   jaeger:
     image: jaegertracing/all-in-one
