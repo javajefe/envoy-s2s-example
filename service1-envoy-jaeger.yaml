@@ -63,7 +63,7 @@ static_resources:
     lb_policy: round_robin
     hosts:
     - socket_address:
-        address: 127.0.0.1
+        address: service1
         port_value: 8080
   - name: service2
     connect_timeout: 0.250s
@@ -72,7 +72,7 @@ static_resources:
     http2_protocol_options: {}
     hosts:
     - socket_address:
-        address: service2
+        address: local-envoy2
         port_value: 80
   - name: jaeger
     connect_timeout: 1s

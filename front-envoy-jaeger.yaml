@@ -20,11 +20,29 @@ static_resources:
               - "*"
               routes:
               - match:
-                  prefix: "/"
+                  prefix: "/service/1"
                 route:
                   cluster: service1
                 decorator:
                   operation: checkAvailability
+              - match:
+                  prefix: "/trace/1"
+                route:
+                  cluster: service1
+                decorator:
+                  operation: checkAvailability
+              - match:
+                  prefix: "/service/2"
+                route:
+                  cluster: service2
+                decorator:
+                  operation: checkStock
+              - match:
+                  prefix: "/trace/2"
+                route:
+                  cluster: service2
+                decorator:
+                  operation: checkStock
           http_filters:
           - name: envoy.router
             config: {}
@@ -36,7 +54,16 @@ static_resources:
     http2_protocol_options: {}
     hosts:
     - socket_address:
-        address: service1
+        address: local-envoy1
+        port_value: 80
+  - name: service2
+    connect_timeout: 0.250s
+    type: strict_dns
+    lb_policy: round_robin
+    http2_protocol_options: {}
+    hosts:
+    - socket_address:
+        address: local-envoy2
         port_value: 80
   - name: jaeger
     connect_timeout: 1s

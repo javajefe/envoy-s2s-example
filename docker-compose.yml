@@ -7,59 +7,84 @@ services:
       dockerfile: Dockerfile-frontenvoy
     volumes:
       - ./front-envoy-jaeger.yaml:/etc/front-envoy.yaml
-    networks:
-      - envoymesh
     expose:
       - "80"
       - "8001"
     ports:
       - "8000:80"
       - "8001:8001"
+    networks:
+      envoymesh: {}
+
+
+  local-envoy1:
+    build:
+      context: .
+      dockerfile: Dockerfile-localenvoy
+    volumes:
+      - ./service1-envoy-jaeger.yaml:/etc/service-envoy.yaml
+    environment:
+      - SERVICE_NAME=1
+    expose:
+      - "80"
+    networks:
+      envoymesh: {}
+      servicepod1:
+        aliases:
+          - local-proxy
 
   service1:
     build:
       context: .
       dockerfile: Dockerfile-service
-    volumes:
-      - ./service1-envoy-jaeger.yaml:/etc/service-envoy.yaml
-    networks:
-      envoymesh:
-        aliases:
-          - service1
     environment:
       - SERVICE_NAME=1
+    networks:
+      servicepod1:
+        aliases:
+          - service1
+
+  local-envoy2:
+    build:
+      context: .
+      dockerfile: Dockerfile-localenvoy
+    volumes:
+      - ./service2-envoy-jaeger.yaml:/etc/service-envoy.yaml
+    environment:
+      - SERVICE_NAME=2
     expose:
       - "80"
+    networks:
+      envoymesh: {}
+      servicepod2:
+        aliases:
+          - local-proxy
 
   service2:
     build:
       context: .
       dockerfile: Dockerfile-service
-    volumes:
-      - ./service2-envoy-jaeger.yaml:/etc/service-envoy.yaml
-    networks:
-      envoymesh:
-        aliases:
-          - service2
     environment:
       - SERVICE_NAME=2
-    expose:
-      - "80"
+    networks:
+      servicepod2:
+        aliases:
+          - service2
 
   jaeger:
     image: jaegertracing/all-in-one
     environment:
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-    networks:
-      envoymesh:
-        aliases:
-          - jaeger
     expose:
       - "9411"
       - "16686"
     ports:
       - "9411:9411"
       - "16686:16686"
+    networks:
+      envoymesh: {}
 
 networks:
   envoymesh: {}
+  servicepod1: {}
+  servicepod2: {}

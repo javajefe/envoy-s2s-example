@@ -32,11 +32,15 @@ def trace(service_number):
         for header in TRACE_HEADERS_TO_PROPAGATE:
             if header in request.headers:
                 headers[header] = request.headers[header]
-        ret = requests.get("http://localhost:9000/trace/2", headers=headers)
-    return ('Hello from behind Envoy (service {})! hostname: {} resolved'
-            'hostname: {}\n'.format(os.environ['SERVICE_NAME'], 
+        ret = requests.get("http://local-proxy:9000/trace/2", headers=headers)
+        return ('Hello from behind Envoy (service {})! hostname: {} resolved'
+            'hostname: {}\n'
+            'And other answer is {}'.format(os.environ['SERVICE_NAME'], 
                                     socket.gethostname(),
-                                    socket.gethostbyname(socket.gethostname())))
+                                    socket.gethostbyname(socket.gethostname()),
+                                    ret.text if ret.status_code == 200 else 'HTTP STATUS CODE {}'.format(ret.status_code)))
+    else:
+        return hello(service_number)
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
