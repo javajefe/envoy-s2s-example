@@ -12,6 +12,10 @@ static_resources:
             operation_name: ingress
           codec_type: auto
           stat_prefix: ingress_http
+          access_log:
+            - name: envoy.file_access_log
+              config:
+                path: "/var/log/access.log"
           route_config:
             name: service1_route
             virtual_hosts:
@@ -40,6 +44,10 @@ static_resources:
             operation_name: egress
           codec_type: auto
           stat_prefix: egress_http
+          access_log:
+            - name: envoy.file_access_log
+              config:
+                path: "/var/log/access.log"
           route_config:
             name: service2_route
             virtual_hosts:
