@@ -1,6 +1,7 @@
 version: '2'
 services:
 
+  # Front Proxy
   front-envoy:
     build:
       context: .
@@ -16,7 +17,7 @@ services:
     networks:
       envoymesh: {}
 
-
+  # Service group 1
   local-envoy1:
     build:
       context: .
@@ -44,6 +45,8 @@ services:
         aliases:
           - local-service
 
+
+  # Service group 2
   local-envoy2:
     build:
       context: .
@@ -71,6 +74,7 @@ services:
         aliases:
           - local-service
 
+  # Jaeger
   jaeger:
     image: jaegertracing/all-in-one
     environment:
@@ -83,6 +87,30 @@ services:
       - "16686:16686"
     networks:
       envoymesh: {}
+
+  # Lyft Service Discovery
+  discovery:
+    image: javajefe/lyftdiscovery
+    environment:
+      - BACKEND_STORAGE=InMemory
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    networks:
+      envoymesh: {}
+
+  # Registrator for Service Discovery
+  # Registers local-envoy1 and local-envoy2
+  registrator:
+    build:
+      context: ./LyftDiscoveryRegistrator
+      dockerfile: Dockerfile
+    environment:
+      - refresh_interval=5
+    networks:
+      envoymesh: {}
+
 
 networks:
   envoymesh: {}
