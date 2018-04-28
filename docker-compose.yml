@@ -107,7 +107,9 @@ services:
       context: ./LyftDiscoveryRegistrator
       dockerfile: Dockerfile
     environment:
+      - discovery=discovery
       - refresh_interval=5
+      - proxies=local-envoy1:80:service1 local-envoy2:80:service2
     networks:
       envoymesh: {}
 

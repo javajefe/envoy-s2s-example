@@ -1,5 +1,6 @@
 FROM debian
 ENV discovery discovery
+ENV proxies=
 ENV refresh_interval 5
 ADD . /
 RUN \

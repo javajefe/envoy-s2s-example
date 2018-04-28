@@ -1,1 +1,1 @@
-service_repo_name=SRN&ip=$ip&port=$port&revision=REVISION&tags={"region":"us-east-1","az":"us-east-1a","instance_id":"xxxxxx"}
+service_repo_name=SRN&ip=$ip&port=$proxyport&revision=REVISION&tags={"region":"us-east-1","az":"us-east-1a","instance_id":"xxxxxx"}

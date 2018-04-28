@@ -1,17 +1,20 @@
 #!/bin/bash
 while true
 do
-	for (( i=1; i <= 2; i++ ))
+	for p in $proxies
 	do
-		export service=service$i
-		export proxy=local-envoy$i
+		pp=(${p//:/ })
+		export proxy="${pp[0]}"
+		export proxyport="${pp[1]}"
+		export service="${pp[2]}"
 		export ip=$(dig +short $proxy | head -n 1)
-		export port=80
 		if [ -n $ip ]
 			then
-			envsubst < template > $service.post
-			curl -v -s -X POST -d @service$i.post http://$discovery:8080/v1/registration/$service
+			envsubst < template > service.post
+			echo Registering proxy $proxy IP $ip:$proxyport for $service with POST:
+			cat service.post
+			curl -v -s -X POST -d @service.post http://$discovery:8080/v1/registration/$service
 		fi
 	done
-	sleep 5
+	sleep $refresh_interval
 done
