@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile-frontenvoy
     volumes:
-      - ./front-envoy-jaeger.yaml:/etc/front-envoy.yaml
+      - ./front-envoy.yaml:/etc/front-envoy.yaml
     expose:
       - "80"
       - "8001"
@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: Dockerfile-localenvoy
     volumes:
-      - ./service1-envoy-jaeger.yaml:/etc/service-envoy.yaml
+      - ./service1-envoy.yaml:/etc/service-envoy.yaml
     environment:
       - SERVICE_NAME=1
     expose:
@@ -52,7 +52,7 @@ services:
       context: .
       dockerfile: Dockerfile-localenvoy
     volumes:
-      - ./service2-envoy-jaeger.yaml:/etc/service-envoy.yaml
+      - ./service2-envoy.yaml:/etc/service-envoy.yaml
     environment:
       - SERVICE_NAME=2
     expose:
@@ -71,6 +71,33 @@ services:
       - SERVICE_NAME=2
     networks:
       servicepod2:
+        aliases:
+          - local-service
+
+  local-envoy2a:
+    build:
+      context: .
+      dockerfile: Dockerfile-localenvoy
+    volumes:
+      - ./service2-envoy.yaml:/etc/service-envoy.yaml
+    environment:
+      - SERVICE_NAME=2a
+    expose:
+      - "80"
+    networks:
+      envoymesh: {}
+      servicepod2a:
+        aliases:
+          - local-proxy
+
+  service2a:
+    build:
+      context: .
+      dockerfile: Dockerfile-service
+    environment:
+      - SERVICE_NAME=2a
+    networks:
+      servicepod2a:
         aliases:
           - local-service
 
@@ -109,7 +136,7 @@ services:
     environment:
       - discovery=discovery
       - refresh_interval=5
-      - proxies=local-envoy1:80:service1 local-envoy2:80:service2
+      - proxies=local-envoy1:80:service1 local-envoy2:80:service2 local-envoy2a:80:service2
     networks:
       envoymesh: {}
 
@@ -118,3 +145,4 @@ networks:
   envoymesh: {}
   servicepod1: {}
   servicepod2: {}
+  servicepod2a: {}
