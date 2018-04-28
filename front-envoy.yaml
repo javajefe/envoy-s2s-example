@@ -53,22 +53,28 @@ static_resources:
   clusters:
   - name: service1
     connect_timeout: 0.250s
-    type: strict_dns
+    type: EDS
     lb_policy: round_robin
     http2_protocol_options: {}
-    hosts:
-    - socket_address:
-        address: local-envoy1
-        port_value: 80
+    eds_cluster_config:
+      eds_config:
+        api_config_source:
+          api_type: REST_LEGACY
+          cluster_names: [xds_cluster]
+          refresh_delay:
+            seconds: 5
   - name: service2
     connect_timeout: 0.250s
-    type: strict_dns
+    type: EDS
     lb_policy: round_robin
     http2_protocol_options: {}
-    hosts:
-    - socket_address:
-        address: local-envoy2
-        port_value: 80
+    eds_cluster_config:
+      eds_config:
+        api_config_source:
+          api_type: REST_LEGACY
+          cluster_names: [xds_cluster]
+          refresh_delay:
+            seconds: 5
   - name: jaeger
     connect_timeout: 1s
     type: strict_dns
@@ -77,6 +83,12 @@ static_resources:
     - socket_address:
         address: jaeger
         port_value: 9411
+  - name: xds_cluster
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: ROUND_ROBIN
+    # http2_protocol_options: {}
+    hosts: [{ socket_address: { address: discovery, port_value: 8080 }}]
 tracing:
   http:
     name: envoy.zipkin
