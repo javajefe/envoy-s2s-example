@@ -81,10 +81,8 @@ static_resources:
     eds_cluster_config:
       eds_config:
         api_config_source:
-          api_type: REST_LEGACY
+          api_type: GRPC
           cluster_names: [xds_cluster]
-          refresh_delay:
-            seconds: 5
   - name: jaeger
     connect_timeout: 1s
     type: strict_dns
@@ -97,8 +95,8 @@ static_resources:
     connect_timeout: 0.25s
     type: strict_dns
     lb_policy: ROUND_ROBIN
-    # http2_protocol_options: {}
-    hosts: [{ socket_address: { address: discovery, port_value: 8080 }}]
+    http2_protocol_options: {}
+    hosts: [{ socket_address: { address: xds, port_value: 8503 }}]
 tracing:
   http:
     name: envoy.zipkin
