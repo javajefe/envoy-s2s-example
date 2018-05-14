@@ -1,0 +1,66 @@
+version: '2'
+services:
+
+  # Front Proxy
+  front-envoy:
+    volumes:
+      - /home/ubuntu/front-envoy.yaml:/etc/front-envoy.yaml
+
+  # Service group 1
+  local-envoy1:
+    volumes:
+      - /home/ubuntu/service1-envoy.yaml:/etc/service-envoy.yaml
+    ports:
+      - "80:80"
+
+  # Registrator for Service Discovery
+  registrator1:
+    environment:
+      - ENVIRONMENT=AWS
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_HOST_PORT=80
+      - SERVICE_NAME=service1
+      - REFRESH_INTERVAL=5
+
+  # Service group 2
+  local-envoy2:
+    volumes:
+      - /home/ubuntu/service2-envoy.yaml:/etc/service-envoy.yaml
+    ports:
+      - "80:80"
+
+  # Registrator for Service Discovery
+  registrator2:
+    environment:
+      - ENVIRONMENT=AWS
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_HOST_PORT=80
+      - SERVICE_NAME=service2
+      - REFRESH_INTERVAL=5
+
+  # Service group 2a
+  local-envoy2a:
+    volumes:
+      - /home/ubuntu/service2-envoy.yaml:/etc/service-envoy.yaml
+    ports:
+      - "80:80"
+
+  # Registrator for Service Discovery
+  registrator2a:
+    environment:
+      - ENVIRONMENT=AWS
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_HOST_PORT=80
+      - SERVICE_NAME=service2
+      - REFRESH_INTERVAL=5
+
+  # Lyft Service Discovery
+  discovery:
+    image: javajefe/lyft-discovery
+    environment:
+      - BACKEND_STORAGE=DynamoDB
+      - DYNAMODB_CREATE_TABLES_IN_APP=true
+      - DYNAMODB_TABLE_HOSTS=service_discovery
+      - APPLICATION_ENV=production
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}

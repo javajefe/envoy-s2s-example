@@ -38,12 +38,30 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-service
+    depends_on:
+      - local-envoy1
     environment:
       - SERVICE_NAME=1
     networks:
       servicepod1:
         aliases:
           - local-service
+
+  # Registrator for Service Discovery
+  registrator1:
+    image: javajefe/lyft-discovery-registrator
+    depends_on:
+      - local-envoy1
+      - service1
+    environment:
+      - ENVIRONMENT=DOCKER
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_NETWORK_ALIAS=local-envoy1
+      - PROXY_HOST_PORT=80
+      - SERVICE_NAME=service1
+      - REFRESH_INTERVAL=5
+    networks:
+      envoymesh: {}
 
 
   # Service group 2
@@ -74,6 +92,23 @@ services:
         aliases:
           - local-service
 
+  # Registrator for Service Discovery
+  registrator2:
+    image: javajefe/lyft-discovery-registrator
+    depends_on:
+      - local-envoy2
+      - service2
+    environment:
+      - ENVIRONMENT=DOCKER
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_NETWORK_ALIAS=local-envoy2
+      - PROXY_HOST_PORT=80
+      - SERVICE_NAME=service2
+      - REFRESH_INTERVAL=5
+    networks:
+      envoymesh: {}
+
+
   local-envoy2a:
     build:
       context: .
@@ -101,6 +136,23 @@ services:
         aliases:
           - local-service
 
+  # Registrator for Service Discovery
+  registrator2a:
+    image: javajefe/lyft-discovery-registrator
+    depends_on:
+      - local-envoy2a
+      - service2a
+    environment:
+      - ENVIRONMENT=DOCKER
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_NETWORK_ALIAS=local-envoy2a
+      - PROXY_HOST_PORT=80
+      - SERVICE_NAME=service2
+      - REFRESH_INTERVAL=5
+    networks:
+      envoymesh: {}
+
+
   # Jaeger
   jaeger:
     image: jaegertracing/all-in-one
@@ -117,9 +169,10 @@ services:
 
   # Lyft Service Discovery
   discovery:
-    image: javajefe/lyftdiscovery
+    image: javajefe/lyft-discovery
     environment:
       - BACKEND_STORAGE=InMemory
+      - APPLICATION_ENV=production
     expose:
       - "8080"
     ports:
@@ -127,22 +180,9 @@ services:
     networks:
       envoymesh: {}
 
-  # Registrator for Service Discovery
-  # Registers local-envoy1 and local-envoy2
-  registrator:
-    build:
-      context: ./LyftDiscoveryRegistrator
-      dockerfile: Dockerfile
-    environment:
-      - discovery=discovery
-      - refresh_interval=5
-      - proxies=local-envoy1:80:service1 local-envoy2:80:service2 local-envoy2a:80:service2
-    networks:
-      envoymesh: {}
-
-
 networks:
   envoymesh: {}
   servicepod1: {}
   servicepod2: {}
   servicepod2a: {}
+
