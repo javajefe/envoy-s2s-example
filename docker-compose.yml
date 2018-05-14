@@ -5,9 +5,13 @@ services:
   front-envoy:
     build:
       context: .
-      dockerfile: Dockerfile-frontenvoy
+      dockerfile: Dockerfile-envoy
     volumes:
-      - ./front-envoy.yaml:/etc/front-envoy.yaml
+      - ./front-envoy.tmpl:/etc/envoy.tmpl
+    environment:
+      - SERVICE_NODE=front-proxy
+      - SERVICE_CLUSTER=front-proxy
+      - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
       - "80"
       - "8001"
@@ -21,11 +25,13 @@ services:
   local-envoy1:
     build:
       context: .
-      dockerfile: Dockerfile-localenvoy
+      dockerfile: Dockerfile-envoy
     volumes:
-      - ./service1-envoy.yaml:/etc/service-envoy.yaml
+      - ./service1-envoy.tmpl:/etc/envoy.tmpl
     environment:
-      - SERVICE_NAME=1
+      - SERVICE_NODE=service1-proxy
+      - SERVICE_CLUSTER=service1
+      - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
       - "80"
     networks:
@@ -68,11 +74,13 @@ services:
   local-envoy2:
     build:
       context: .
-      dockerfile: Dockerfile-localenvoy
+      dockerfile: Dockerfile-envoy
     volumes:
-      - ./service2-envoy.yaml:/etc/service-envoy.yaml
+      - ./service2-envoy.tmpl:/etc/envoy.tmpl
     environment:
-      - SERVICE_NAME=2
+      - SERVICE_NODE=service2-proxy
+      - SERVICE_CLUSTER=service2
+      - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
       - "80"
     networks:
@@ -112,11 +120,13 @@ services:
   local-envoy2a:
     build:
       context: .
-      dockerfile: Dockerfile-localenvoy
+      dockerfile: Dockerfile-envoy
     volumes:
-      - ./service2-envoy.yaml:/etc/service-envoy.yaml
+      - ./service2-envoy.tmpl:/etc/envoy.tmpl
     environment:
-      - SERVICE_NAME=2a
+      - SERVICE_NODE=service2a-proxy
+      - SERVICE_CLUSTER=service2
+      - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
       - "80"
     networks:

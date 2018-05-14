@@ -17,9 +17,9 @@ static_resources:
               config:
                 path: "/var/log/access.log"
           route_config:
-            name: service1_route
+            name: local_route
             virtual_hosts:
-            - name: service1
+            - name: service2
               domains:
               - "*"
               routes:
@@ -27,38 +27,6 @@ static_resources:
                   prefix: "/"
                 route:
                   cluster: local_service
-                decorator:
-                  operation: checkAvailability
-          http_filters:
-          - name: envoy.router
-            config: {}
-  - address:
-      socket_address:
-        address: 0.0.0.0
-        port_value: 9000
-    filter_chains:
-    - filters:
-      - name: envoy.http_connection_manager
-        config:
-          tracing:
-            operation_name: egress
-          codec_type: auto
-          stat_prefix: egress_http
-          access_log:
-            - name: envoy.file_access_log
-              config:
-                path: "/var/log/access.log"
-          route_config:
-            name: service2_route
-            virtual_hosts:
-            - name: service2
-              domains:
-              - "*"
-              routes:
-              - match:
-                  prefix: "/trace/2"
-                route:
-                  cluster: service2
                 decorator:
                   operation: checkStock
           http_filters:
@@ -73,18 +41,6 @@ static_resources:
     - socket_address:
         address: local-service
         port_value: 8080
-  - name: service2
-    connect_timeout: 0.250s
-    type: EDS
-    lb_policy: round_robin
-    http2_protocol_options: {}
-    eds_cluster_config:
-      eds_config:
-        api_config_source:
-          api_type: REST_LEGACY
-          cluster_names: [xds_cluster]
-          refresh_delay:
-            seconds: 5
   - name: jaeger
     connect_timeout: 1s
     type: strict_dns
@@ -98,7 +54,9 @@ static_resources:
     type: strict_dns
     lb_policy: ROUND_ROBIN
     # http2_protocol_options: {}
-    hosts: [{ socket_address: { address: discovery, port_value: 8080 }}]
+    {{ $discovery := parseUrl .Env.DISCOVERY_URL }}
+    {{ $discoveryArray := split $discovery.Host ":" }}
+    hosts: [{ socket_address: { address: "{{ index $discoveryArray 0 }}", port_value: {{ index $discoveryArray 1 }} }}]
 tracing:
   http:
     name: envoy.zipkin

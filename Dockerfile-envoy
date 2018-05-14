@@ -1,0 +1,12 @@
+FROM envoyproxy/envoy:latest
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+VOLUME /etc/envoy.tmpl
+ENV SERVICE_NODE=
+ENV SERVICE_CLUSTER=
+ENV DISCOVERY_URL=
+CMD dockerize -template /etc/envoy.tmpl:/etc/envoy.yaml \
+	/usr/local/bin/envoy -c /etc/envoy.yaml --service-node $SERVICE_NODE --service-cluster $SERVICE_CLUSTER
