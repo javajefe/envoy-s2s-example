@@ -1,19 +1,23 @@
 version: '2'
 services:
 
+  # --------------------------------------------------
   # Front Proxy
+  # --------------------------------------------------
   front-envoy:
     volumes:
       - /home/ubuntu/front-envoy.tmpl:/etc/envoy.tmpl
 
-  # Service group 1
+
+  # --------------------------------------------------
+  # Service 1
+  # --------------------------------------------------
   local-envoy1:
     volumes:
       - /home/ubuntu/service1-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 
-  # Registrator for Service Discovery
   registrator1:
     environment:
       - ENVIRONMENT=AWS
@@ -22,14 +26,16 @@ services:
       - SERVICE_NAME=service1
       - REFRESH_INTERVAL=5
 
-  # Service group 2
+
+  # --------------------------------------------------
+  # Service 2 (first node)
+  # --------------------------------------------------
   local-envoy2:
     volumes:
       - /home/ubuntu/service2-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 
-  # Registrator for Service Discovery
   registrator2:
     environment:
       - ENVIRONMENT=AWS
@@ -38,14 +44,16 @@ services:
       - SERVICE_NAME=service2
       - REFRESH_INTERVAL=5
 
-  # Service group 2a
+
+  # --------------------------------------------------
+  # Service 2 (second node)
+  # --------------------------------------------------
   local-envoy2a:
     volumes:
       - /home/ubuntu/service2-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 
-  # Registrator for Service Discovery
   registrator2a:
     environment:
       - ENVIRONMENT=AWS
@@ -54,7 +62,23 @@ services:
       - SERVICE_NAME=service2
       - REFRESH_INTERVAL=5
 
+
+  # --------------------------------------------------
+  # Jaeger
+  # --------------------------------------------------
+  registrator-jaeger:
+    environment:
+      - ENVIRONMENT=AWS
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_NETWORK_ALIAS=jaeger
+      - PROXY_HOST_PORT=9411
+      - SERVICE_NAME=jaeger
+      - REFRESH_INTERVAL=5
+
+
+  # --------------------------------------------------
   # Lyft Service Discovery
+  # --------------------------------------------------
   discovery:
     image: javajefe/lyft-discovery
     environment:

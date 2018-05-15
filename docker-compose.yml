@@ -1,7 +1,9 @@
 version: '2'
 services:
 
+  # --------------------------------------------------
   # Front Proxy
+  # --------------------------------------------------
   front-envoy:
     build:
       context: .
@@ -21,7 +23,9 @@ services:
     networks:
       envoymesh: {}
 
-  # Service group 1
+  # --------------------------------------------------
+  # Service 1
+  # --------------------------------------------------
   local-envoy1:
     build:
       context: .
@@ -53,7 +57,6 @@ services:
         aliases:
           - local-service
 
-  # Registrator for Service Discovery
   registrator1:
     image: javajefe/lyft-discovery-registrator
     depends_on:
@@ -70,7 +73,9 @@ services:
       envoymesh: {}
 
 
-  # Service group 2
+  # --------------------------------------------------
+  # Service 2 (first node)
+  # --------------------------------------------------
   local-envoy2:
     build:
       context: .
@@ -102,7 +107,6 @@ services:
         aliases:
           - local-service
 
-  # Registrator for Service Discovery
   registrator2:
     image: javajefe/lyft-discovery-registrator
     depends_on:
@@ -119,6 +123,9 @@ services:
       envoymesh: {}
 
 
+  # --------------------------------------------------
+  # Service 2 (second node)
+  # --------------------------------------------------
   local-envoy2a:
     build:
       context: .
@@ -150,7 +157,6 @@ services:
         aliases:
           - local-service
 
-  # Registrator for Service Discovery
   registrator2a:
     image: javajefe/lyft-discovery-registrator
     depends_on:
@@ -167,7 +173,9 @@ services:
       envoymesh: {}
 
 
+  # --------------------------------------------------
   # Jaeger
+  # --------------------------------------------------
   jaeger:
     image: jaegertracing/all-in-one
     environment:
@@ -181,7 +189,24 @@ services:
     networks:
       envoymesh: {}
 
+  registrator-jaeger:
+    image: javajefe/lyft-discovery-registrator
+    depends_on:
+      - jaeger
+    environment:
+      - ENVIRONMENT=DOCKER
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_NETWORK_ALIAS=jaeger
+      - PROXY_HOST_PORT=9411
+      - SERVICE_NAME=jaeger
+      - REFRESH_INTERVAL=5
+    networks:
+      envoymesh: {}
+
+
+  # --------------------------------------------------
   # Lyft Service Discovery
+  # --------------------------------------------------
   discovery:
     image: javajefe/lyft-discovery
     environment:

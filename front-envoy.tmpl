@@ -77,12 +77,15 @@ static_resources:
             seconds: 5
   - name: jaeger
     connect_timeout: 1s
-    type: strict_dns
+    type: EDS
     lb_policy: round_robin
-    hosts:
-    - socket_address:
-        address: jaeger
-        port_value: 9411
+    eds_cluster_config:
+      eds_config:
+        api_config_source:
+          api_type: REST_LEGACY
+          cluster_names: [xds_cluster]
+          refresh_delay:
+            seconds: 5
   - name: xds_cluster
     connect_timeout: 0.25s
     type: strict_dns
