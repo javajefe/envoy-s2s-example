@@ -93,6 +93,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-service
+    depends_on:
+      - local-envoy2
     environment:
       - SERVICE_NAME=2
     networks:
@@ -139,6 +141,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-service
+    depends_on:
+      - local-envoy2a
     environment:
       - SERVICE_NAME=2a
     networks:
