@@ -41,7 +41,7 @@ services:
   # Service group 2a
   local-envoy2a:
     volumes:
-      - /home/ubuntu/service2-envoy.tmpl:/etc/service-envoy.tmpl
+      - /home/ubuntu/service2-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 
