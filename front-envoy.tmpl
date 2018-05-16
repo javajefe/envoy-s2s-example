@@ -50,6 +50,13 @@ static_resources:
           http_filters:
           - name: envoy.router
             config: {}
+      tls_context:
+        common_tls_context:
+          tls_certificates:
+            - certificate_chain:
+                filename: /etc/certs/servercert.pem
+              private_key:
+                filename: /etc/certs/serverkey.pem
   clusters:
   - name: service1
     connect_timeout: 0.250s

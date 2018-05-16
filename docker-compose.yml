@@ -10,6 +10,7 @@ services:
       dockerfile: Dockerfile-envoy
     volumes:
       - ./front-envoy.tmpl:/etc/envoy.tmpl
+      - ./certs/:/etc/certs/
     environment:
       - SERVICE_NODE=front-proxy
       - SERVICE_CLUSTER=front-proxy
