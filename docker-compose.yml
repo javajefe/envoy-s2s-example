@@ -33,6 +33,7 @@ services:
       dockerfile: Dockerfile-envoy
     volumes:
       - ./service1-envoy.tmpl:/etc/envoy.tmpl
+      - ./certs/:/etc/certs/
     environment:
       - SERVICE_NODE=service1-proxy
       - SERVICE_CLUSTER=service1
@@ -83,6 +84,7 @@ services:
       dockerfile: Dockerfile-envoy
     volumes:
       - ./service2-envoy.tmpl:/etc/envoy.tmpl
+      - ./certs/:/etc/certs/
     environment:
       - SERVICE_NODE=service2-proxy
       - SERVICE_CLUSTER=service2
@@ -133,6 +135,7 @@ services:
       dockerfile: Dockerfile-envoy
     volumes:
       - ./service2-envoy.tmpl:/etc/envoy.tmpl
+      - ./certs/:/etc/certs/
     environment:
       - SERVICE_NODE=service2a-proxy
       - SERVICE_CLUSTER=service2

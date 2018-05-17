@@ -70,6 +70,13 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
+    tls_context:
+      common_tls_context:
+        tls_certificates:
+          - certificate_chain:
+              filename: /etc/certs/upstreamcert.pem
+            private_key:
+              filename: /etc/certs/upstreamkey.pem
   - name: service2
     connect_timeout: 0.250s
     type: EDS
@@ -82,6 +89,13 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
+    tls_context:
+      common_tls_context:
+        tls_certificates:
+          - certificate_chain:
+              filename: /etc/certs/upstreamcert.pem
+            private_key:
+              filename: /etc/certs/upstreamkey.pem
   - name: jaeger
     connect_timeout: 1s
     type: EDS
