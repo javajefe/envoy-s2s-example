@@ -25,29 +25,63 @@ static_resources:
               routes:
               - match:
                   prefix: "/service/1"
+                  headers:
+                    - name: "x-envoy-ip-tags"
+                      exact_match: ALLOWED_REQUEST
                 route:
                   cluster: service1
                 decorator:
                   operation: checkAvailability
               - match:
                   prefix: "/trace/1"
+                  headers:
+                    - name: x-envoy-ip-tags
+                      exact_match: ALLOWED_REQUEST
                 route:
                   cluster: service1
                 decorator:
                   operation: checkAvailability
               - match:
                   prefix: "/service/2"
+                  headers:
+                    - name: x-envoy-ip-tags
+                      exact_match: ALLOWED_REQUEST
                 route:
                   cluster: service2
                 decorator:
                   operation: checkStock
               - match:
                   prefix: "/trace/2"
+                  headers:
+                    - name: x-envoy-ip-tags
+                      exact_match: ALLOWED_REQUEST
                 route:
                   cluster: service2
                 decorator:
                   operation: checkStock
+              - match:
+                  prefix: "/"
+                direct_response:
+                  status: 403
+                  body:
+                    inline_string: "Request from this IP is not allowed"
           http_filters:
+          {{ if .Env.WHITELIST }}
+          {{ $whitelist := split .Env.WHITELIST "," }}
+          - name: envoy.ip_tagging
+            config:
+              request_type: BOTH
+              ip_tags:
+                - ip_tag_name: ALLOWED_REQUEST
+                  ip_list:
+                    {{ range $whitelist }}
+                    {{ $cidr := split . "/" }}
+                    {{ if $cidr }}
+                    - address_prefix: {{ index $cidr 0 }}
+                      prefix_len: {{ index $cidr 1 }}
+                    {{ end }}
+                    {{ end }}
+          {{ end }}
           - name: envoy.router
             config: {}
   clusters:

@@ -8,5 +8,6 @@ VOLUME /etc/envoy.tmpl
 ENV SERVICE_NODE=
 ENV SERVICE_CLUSTER=
 ENV DISCOVERY_URL=
+ENV WHITELIST=
 CMD dockerize -template /etc/envoy.tmpl:/etc/envoy.yaml \
 	/usr/local/bin/envoy -c /etc/envoy.yaml --service-node $SERVICE_NODE --service-cluster $SERVICE_CLUSTER
