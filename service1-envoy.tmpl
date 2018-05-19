@@ -55,6 +55,14 @@ static_resources:
               domains:
               - "*"
               routes:
+              # Prefix-based routing with rewrite
+              - match:
+                  prefix: "/service2/"
+                route:
+                  cluster: service2
+                  prefix_rewrite: "/"
+
+              # Prefix-based routing
               - match:
                   prefix: "/trace/2"
                 route:

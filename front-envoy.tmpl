@@ -23,6 +23,21 @@ static_resources:
               domains:
               - "*"
               routes:
+              # Prefix-based routing with rewrite
+              - match:
+                  prefix: "/service1/"
+                route:
+                  cluster: service1
+                  prefix_rewrite: "/"
+                  host_rewrite: "service1"
+              - match:
+                  prefix: "/service2/"
+                route:
+                  cluster: service2
+                  prefix_rewrite: "/"
+                  host_rewrite: "service2"
+
+              # Prefix-based routing
               - match:
                   prefix: "/service/1"
                 route:
@@ -47,6 +62,7 @@ static_resources:
                   cluster: service2
                 decorator:
                   operation: checkStock
+
           http_filters:
           - name: envoy.router
             config: {}
