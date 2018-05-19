@@ -42,30 +42,54 @@ static_resources:
                   prefix: "/service/1"
                 route:
                   cluster: service1
+                  # This prevents showing error to a client, but does not exclude sick node from request
+                  # https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/route/route.proto#envoy-api-msg-route-routeaction-retrypolicy
+                  # https://www.envoyproxy.io/docs/envoy/latest/configuration/http_filters/router_filter#x-envoy-retry-on
+                  retry_policy:
+                    retry_on: gateway-error
+                    num_retries: 2
+                    per_try_timeout: 2s
                 decorator:
                   operation: checkAvailability
               - match:
                   prefix: "/trace/1"
                 route:
                   cluster: service1
+                  retry_policy:
+                    retry_on: gateway-error
+                    num_retries: 2
+                    per_try_timeout: 2s
                 decorator:
                   operation: checkAvailability
               - match:
                   prefix: "/service/2"
                 route:
                   cluster: service2
+                  retry_policy:
+                    retry_on: gateway-error
+                    num_retries: 2
+                    per_try_timeout: 2s
                 decorator:
                   operation: checkStock
               - match:
                   prefix: "/trace/2"
                 route:
                   cluster: service2
+                  retry_policy:
+                    retry_on: gateway-error
+                    num_retries: 2
+                    per_try_timeout: 2s
                 decorator:
                   operation: checkStock
 
           http_filters:
           - name: envoy.router
-            config: {}
+            config:
+              upstream_log:
+                name: envoy.file_access_log
+                config:
+                  path: "/var/log/upstream.log"
+
   clusters:
   - name: service1
     connect_timeout: 0.250s
@@ -79,6 +103,9 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
+    # Eventually (after several fail responses) temporary excludes sick nodes from cluster
+    # https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/cluster/outlier_detection.proto
+    outlier_detection: {}
   - name: service2
     connect_timeout: 0.250s
     type: EDS
@@ -91,6 +118,7 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
+    outlier_detection: {}
   - name: jaeger
     connect_timeout: 1s
     type: EDS

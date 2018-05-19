@@ -30,8 +30,20 @@ static_resources:
                 decorator:
                   operation: checkAvailability
           http_filters:
+          # Creates specific external endpoind which can be used by consumers to get health of the whole system (envoy + backend service)
+          # https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/filter/http/health_check/v2/health_check.proto
+          - name: envoy.health_check
+            config:
+              pass_through_mode: false
+              endpoint: "/hc"
+              cluster_min_healthy_percentages:
+                local_service: {value: 100}
           - name: envoy.router
-            config: {}
+            config:
+              upstream_log:
+                name: envoy.file_access_log
+                config:
+                  path: "/var/log/upstream.log"
   - address:
       socket_address:
         address: 0.0.0.0
@@ -67,11 +79,22 @@ static_resources:
                   prefix: "/trace/2"
                 route:
                   cluster: service2
+                  # This prevents showing error to a client, but does not exclude sick node from request
+                  # https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/route/route.proto#envoy-api-msg-route-routeaction-retrypolicy
+                  # https://www.envoyproxy.io/docs/envoy/latest/configuration/http_filters/router_filter#x-envoy-retry-on
+                  retry_policy:
+                    retry_on: gateway-error
+                    num_retries: 2
+                    per_try_timeout: 2s
                 decorator:
                   operation: checkStock
           http_filters:
           - name: envoy.router
-            config: {}
+            config:
+              upstream_log:
+                name: envoy.file_access_log
+                config:
+                  path: "/var/log/upstream.log"
   clusters:
   - name: local_service
     connect_timeout: 0.250s
@@ -81,6 +104,16 @@ static_resources:
     - socket_address:
         address: local-service
         port_value: 8080
+    # Explicitely periodically checks backend service's health
+    # https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/core/health_check.proto#envoy-api-msg-core-healthcheck
+    health_checks:
+      - timeout: 0.250s
+        interval: 1s
+        no_traffic_interval: 10s
+        healthy_threshold: 3
+        unhealthy_threshold: 3
+        http_health_check:
+          path: "/healthcheck"
   - name: service2
     connect_timeout: 0.250s
     type: EDS
@@ -93,6 +126,9 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
+    # Eventually (after several fail responses) temporary excludes sick nodes from cluster
+    # https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/cluster/outlier_detection.proto
+    outlier_detection: {}
   - name: jaeger
     connect_timeout: 1s
     type: EDS
