@@ -83,6 +83,20 @@ static_resources:
                   operation: checkStock
 
           http_filters:
+          {{ if .Env.BASIC_AUTH }}
+          - name: envoy.filters.http.rbac
+            config:
+              rules:
+                action: ALLOW
+                policies:
+                  "allowed":
+                    permissions:
+                      - any: true
+                    principals:
+                      header:
+                        name: Authorization
+                        exact_match: "Basic {{ .Env.BASIC_AUTH }}"
+          {{ end }}
           - name: envoy.router
             config:
               upstream_log:
