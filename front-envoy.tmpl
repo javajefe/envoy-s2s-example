@@ -83,6 +83,27 @@ static_resources:
                   operation: checkStock
 
           http_filters:
+          {{ if .Env.WHITELIST }}
+          {{ $whitelist := split .Env.WHITELIST "," }}
+          - name: envoy.filters.http.rbac
+            config:
+              rules:
+                action: ALLOW
+                policies:
+                  {{ range $i, $w := $whitelist }}
+                  {{ $cidr := split $w "/" }}
+                  {{ if $cidr }}
+                  "allowed_{{ $i }}":
+                    permissions:
+                      - any: true
+                    principals:
+                      source_ip:
+                        address_prefix: {{ index $cidr 0 }}
+                        prefix_len: {{ index $cidr 1 }}
+                  {{ end }}
+                  {{ end }}
+          {{ end }} 
+
           - name: envoy.router
             config:
               upstream_log:
