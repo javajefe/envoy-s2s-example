@@ -49,6 +49,11 @@ static_resources:
                     retry_on: gateway-error
                     num_retries: 2
                     per_try_timeout: 2s
+                  request_headers_to_add:
+                    - header:
+                        key: Authorization
+                        value: "Basic {{ .Env.BASIC_AUTH }}"
+                      append: false
                 decorator:
                   operation: checkAvailability
               - match:
@@ -59,6 +64,11 @@ static_resources:
                     retry_on: gateway-error
                     num_retries: 2
                     per_try_timeout: 2s
+                  request_headers_to_add:
+                    - header:
+                        key: Authorization
+                        value: "Basic {{ .Env.BASIC_AUTH }}"
+                      append: false
                 decorator:
                   operation: checkAvailability
               - match:
@@ -83,20 +93,6 @@ static_resources:
                   operation: checkStock
 
           http_filters:
-          {{ if .Env.BASIC_AUTH }}
-          - name: envoy.filters.http.rbac
-            config:
-              rules:
-                action: ALLOW
-                policies:
-                  "allowed":
-                    permissions:
-                      - any: true
-                    principals:
-                      header:
-                        name: Authorization
-                        exact_match: "Basic {{ .Env.BASIC_AUTH }}"
-          {{ end }}
           - name: envoy.router
             config:
               upstream_log:

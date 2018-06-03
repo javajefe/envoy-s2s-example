@@ -38,6 +38,8 @@ services:
       - SERVICE_NODE=service1-proxy
       - SERVICE_CLUSTER=service1
       - DISCOVERY_URL=${DISCOVERY_URL}
+      # base64(login:pass)
+      - BASIC_AUTH=${BASIC_AUTH}
     expose:
       - "80"
     networks:
@@ -88,6 +90,8 @@ services:
       - SERVICE_NODE=service2-proxy
       - SERVICE_CLUSTER=service2
       - DISCOVERY_URL=${DISCOVERY_URL}
+      # base64(login:pass)
+      - BASIC_AUTH=${BASIC_AUTH}
     expose:
       - "80"
     networks:
@@ -138,6 +142,8 @@ services:
       - SERVICE_NODE=service2a-proxy
       - SERVICE_CLUSTER=service2
       - DISCOVERY_URL=${DISCOVERY_URL}
+      # base64(login:pass)
+      - BASIC_AUTH=${BASIC_AUTH}
     expose:
       - "80"
     networks:

@@ -38,6 +38,20 @@ static_resources:
               endpoint: "/hc"
               cluster_min_healthy_percentages:
                 local_service: {value: 100}
+          {{ if .Env.BASIC_AUTH }}
+          - name: envoy.filters.http.rbac
+            config:
+              rules:
+                action: ALLOW
+                policies:
+                  "allowed":
+                    permissions:
+                      - any: true
+                    principals:
+                      header:
+                        name: Authorization
+                        exact_match: "Basic {{ .Env.BASIC_AUTH }}"
+          {{ end }}
           - name: envoy.router
             config:
               upstream_log:
@@ -86,6 +100,11 @@ static_resources:
                     retry_on: gateway-error
                     num_retries: 2
                     per_try_timeout: 2s
+                  request_headers_to_add:
+                    - header:
+                        key: Authorization
+                        value: "Basic {{ .Env.BASIC_AUTH }}"
+                      append: false
                 decorator:
                   operation: checkStock
           http_filters:
