@@ -2,19 +2,9 @@ version: '2'
 services:
 
   # --------------------------------------------------
-  # Front Proxy
-  # --------------------------------------------------
-  front-envoy:
-    volumes:
-      - /home/ubuntu/front-envoy.tmpl:/etc/envoy.tmpl
-
-
-  # --------------------------------------------------
   # Service 1
   # --------------------------------------------------
   local-envoy1:
-    volumes:
-      - /home/ubuntu/service1-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 
@@ -31,8 +21,6 @@ services:
   # Service 2 (first node)
   # --------------------------------------------------
   local-envoy2:
-    volumes:
-      - /home/ubuntu/service2-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 
@@ -49,8 +37,6 @@ services:
   # Service 2 (second node)
   # --------------------------------------------------
   local-envoy2a:
-    volumes:
-      - /home/ubuntu/service2-envoy.tmpl:/etc/envoy.tmpl
     ports:
       - "80:80"
 

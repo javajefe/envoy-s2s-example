@@ -1,15 +1,14 @@
 version: '2'
 services:
+  # --------------------------------------------------
+  # 
+  # --------------------------------------------------
 
   # --------------------------------------------------
   # Front Proxy
   # --------------------------------------------------
   front-envoy:
-    build:
-      context: .
-      dockerfile: Dockerfile-envoy
-    volumes:
-      - ./front-envoy.tmpl:/etc/envoy.tmpl
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-front:v1
     environment:
       - SERVICE_NODE=front-proxy
       - SERVICE_CLUSTER=front-proxy
@@ -27,11 +26,7 @@ services:
   # Service 1
   # --------------------------------------------------
   local-envoy1:
-    build:
-      context: .
-      dockerfile: Dockerfile-envoy
-    volumes:
-      - ./service1-envoy.tmpl:/etc/envoy.tmpl
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-1:v1
     environment:
       - SERVICE_NODE=service1-proxy
       - SERVICE_CLUSTER=service1
@@ -45,9 +40,7 @@ services:
           - local-proxy
 
   service1:
-    build:
-      context: .
-      dockerfile: Dockerfile-service
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-servicemesh-service:v1
     depends_on:
       - local-envoy1
     environment:
@@ -77,11 +70,7 @@ services:
   # Service 2 (first node)
   # --------------------------------------------------
   local-envoy2:
-    build:
-      context: .
-      dockerfile: Dockerfile-envoy
-    volumes:
-      - ./service2-envoy.tmpl:/etc/envoy.tmpl
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-2:v1
     environment:
       - SERVICE_NODE=service2-proxy
       - SERVICE_CLUSTER=service2
@@ -95,9 +84,7 @@ services:
           - local-proxy
 
   service2:
-    build:
-      context: .
-      dockerfile: Dockerfile-service
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-servicemesh-service:v1
     depends_on:
       - local-envoy2
     environment:
@@ -127,11 +114,7 @@ services:
   # Service 2 (second node)
   # --------------------------------------------------
   local-envoy2a:
-    build:
-      context: .
-      dockerfile: Dockerfile-envoy
-    volumes:
-      - ./service2-envoy.tmpl:/etc/envoy.tmpl
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-2:v1
     environment:
       - SERVICE_NODE=service2a-proxy
       - SERVICE_CLUSTER=service2
@@ -145,9 +128,7 @@ services:
           - local-proxy
 
   service2a:
-    build:
-      context: .
-      dockerfile: Dockerfile-service
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-servicemesh-service:v1
     depends_on:
       - local-envoy2a
     environment:

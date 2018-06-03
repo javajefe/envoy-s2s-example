@@ -1,0 +1,2 @@
+FROM 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy:v1
+COPY ./service1-envoy.tmpl /etc/envoy.tmpl
