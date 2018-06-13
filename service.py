@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import request
-import socket
 import os
 import sys
 import requests
@@ -19,10 +18,7 @@ TRACE_HEADERS_TO_PROPAGATE = [
 
 @app.route('/service/<service_number>')
 def hello(service_number):
-    return ('Hello from behind Envoy (service {})! hostname: {} resolved '
-            'hostname: {}\n'.format(os.environ['SERVICE_NAME'], 
-                                    socket.gethostname(),
-                                    socket.gethostbyname(socket.gethostname())))
+    return ('Hello from behind Envoy (service {})!\n'.format(os.environ['SERVICE_NAME']))
 
 @app.route('/trace/<service_number>')
 def trace(service_number):
@@ -32,12 +28,9 @@ def trace(service_number):
         for header in TRACE_HEADERS_TO_PROPAGATE:
             if header in request.headers:
                 headers[header] = request.headers[header]
-        ret = requests.get("http://local-proxy:9000/trace/2", headers=headers)
-        return ('Hello from behind Envoy (service {})! hostname: {} resolved '
-            'hostname: {}\n'
+        ret = requests.get("http://localhost:9000/trace/2", headers=headers)
+        return ('Hello from behind Envoy (service {})!\n'
             'And other answer is {}'.format(os.environ['SERVICE_NAME'], 
-                                    socket.gethostname(),
-                                    socket.gethostbyname(socket.gethostname()),
                                     ret.text if ret.status_code == 200 else 'HTTP STATUS CODE {}'.format(ret.status_code)))
     else:
         return hello(service_number)

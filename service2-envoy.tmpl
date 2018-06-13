@@ -51,7 +51,7 @@ static_resources:
     lb_policy: round_robin
     hosts:
     - socket_address:
-        address: local-service
+        address: localhost
         port_value: 8080
     # Explicitely periodically checks backend service's health
     # https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/core/health_check.proto#envoy-api-msg-core-healthcheck
