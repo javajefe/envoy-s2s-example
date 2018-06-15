@@ -26,7 +26,7 @@ services:
   # Service 1
   # --------------------------------------------------
   local-envoy1:
-    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-1:v1
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-1:v1.2
     environment:
       - SERVICE_NODE=service1-proxy
       - SERVICE_CLUSTER=service1
@@ -40,7 +40,7 @@ services:
           - local-proxy
 
   service1:
-    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-servicemesh-service:v1
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-servicemesh-service:v1.1
     depends_on:
       - local-envoy1
     environment:
@@ -70,7 +70,7 @@ services:
   # Service 2 (first node)
   # --------------------------------------------------
   local-envoy2:
-    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-2:v1
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-2:v1.2
     environment:
       - SERVICE_NODE=service2-proxy
       - SERVICE_CLUSTER=service2
@@ -114,7 +114,7 @@ services:
   # Service 2 (second node)
   # --------------------------------------------------
   local-envoy2a:
-    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-2:v1
+    image: 895855336803.dkr.ecr.us-east-1.amazonaws.com/poc-envoy-2:v1.2
     environment:
       - SERVICE_NODE=service2a-proxy
       - SERVICE_CLUSTER=service2
