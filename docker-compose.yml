@@ -174,37 +174,6 @@ services:
 
 
   # --------------------------------------------------
-  # Jaeger
-  # --------------------------------------------------
-  jaeger:
-    image: jaegertracing/all-in-one
-    environment:
-      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-    expose:
-      - "9411"
-      - "16686"
-    ports:
-      - "9411:9411"
-      - "16686:16686"
-    networks:
-      envoymesh: {}
-
-  registrator-jaeger:
-    image: javajefe/lyft-discovery-registrator
-    depends_on:
-      - jaeger
-    environment:
-      - ENVIRONMENT=DOCKER
-      - DISCOVERY_URL=${DISCOVERY_URL}
-      - PROXY_NETWORK_ALIAS=jaeger
-      - PROXY_HOST_PORT=9411
-      - SERVICE_NAME=jaeger
-      - REFRESH_INTERVAL=5
-    networks:
-      envoymesh: {}
-
-
-  # --------------------------------------------------
   # Lyft Service Discovery
   # --------------------------------------------------
   discovery:
@@ -219,9 +188,95 @@ services:
     networks:
       envoymesh: {}
 
+
+  # --------------------------------------------------
+  # Tracing (Jaeger + ElasticSearch)
+  # --------------------------------------------------
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    networks:
+      tracing: {}
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.3.0
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    networks:
+      tracing: {}
+
+  registrator-jaeger:
+    image: javajefe/lyft-discovery-registrator
+    environment:
+      - ENVIRONMENT=DOCKER
+      - DISCOVERY_URL=${DISCOVERY_URL}
+      - PROXY_NETWORK_ALIAS=jaeger-collector
+      - PROXY_HOST_PORT=9411
+      - SERVICE_NAME=jaeger
+      - REFRESH_INTERVAL=5
+    networks:
+      envoymesh: {}
+
+  jaeger-collector:
+    image: jaegertracing/jaeger-collector
+    command: ["/go/bin/collector-linux", "--es.server-urls=http://elasticsearch:9200", "--es.num-shards=1", "--span-storage.type=elasticsearch", "--log-level=info"]
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    expose:
+      - "14269"
+      - "14268"
+      - "14267"
+      - "9411"
+    restart: on-failure
+    networks:
+      envoymesh: {}
+      tracing: {}
+
+  jaeger-dependencies:
+    image: jaegertracing/spark-dependencies
+    environment:
+      - STORAGE=elasticsearch
+      - ES_NODES=http://elasticsearch:9200
+      - ES_USERNAME=
+      - ES_PASSWORD=
+    restart: on-failure
+    networks:
+      tracing: {}
+
+  jaeger-query:
+    image: jaegertracing/jaeger-query
+    command: ["/go/bin/query-linux", "--es.server-urls=http://elasticsearch:9200", "--span-storage.type=elasticsearch", "--log-level=debug", "--query.static-files=/go/jaeger-ui/"]
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - no_proxy=localhost
+    expose:
+      - "16686"
+      - "16687"
+    ports:
+      - "16686:16686"
+    restart: on-failure  
+    networks:
+      tracing: {}
+
+
 networks:
   envoymesh: {}
   servicepod1: {}
   servicepod2: {}
   servicepod2a: {}
-
+  tracing: {}
