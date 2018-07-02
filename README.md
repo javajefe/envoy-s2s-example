@@ -37,5 +37,7 @@ Open in your browser any of the links:
 - http://localhost:8000/trace/2 - calls service2/2a
 
 Then open in a separate tab http://localhost:16686 - this is Jaeger UI, there you can look at traces you've made.
+
 Kibana can be found at http://localhost:5601
+
 Envoy front proxy admin page is at http://localhost:8001 
