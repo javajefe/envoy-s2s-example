@@ -1,4 +1,4 @@
-version: '2'
+version: '2.4'
 services:
 
   # --------------------------------------------------
@@ -208,9 +208,18 @@ services:
       - 9200:9200
     networks:
       tracing: {}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   kibana:
     image: docker.elastic.co/kibana/kibana-oss:6.3.0
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     environment:
       SERVER_NAME: kibana
       ELASTICSEARCH_URL: http://elasticsearch:9200
@@ -221,6 +230,8 @@ services:
 
   registrator-jaeger:
     image: javajefe/lyft-discovery-registrator
+    depends_on:
+      - jaeger-collector
     environment:
       - ENVIRONMENT=DOCKER
       - DISCOVERY_URL=${DISCOVERY_URL}
@@ -234,6 +245,9 @@ services:
   jaeger-collector:
     image: jaegertracing/jaeger-collector
     command: ["/go/bin/collector-linux", "--es.server-urls=http://elasticsearch:9200", "--es.num-shards=1", "--span-storage.type=elasticsearch", "--log-level=info"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     environment:
       - SPAN_STORAGE_TYPE=elasticsearch
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
@@ -242,25 +256,29 @@ services:
       - "14268"
       - "14267"
       - "9411"
-    restart: on-failure
     networks:
       envoymesh: {}
       tracing: {}
 
   jaeger-dependencies:
     image: jaegertracing/spark-dependencies
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     environment:
       - STORAGE=elasticsearch
       - ES_NODES=http://elasticsearch:9200
       - ES_USERNAME=
       - ES_PASSWORD=
-    restart: on-failure
     networks:
       tracing: {}
 
   jaeger-query:
     image: jaegertracing/jaeger-query
     command: ["/go/bin/query-linux", "--es.server-urls=http://elasticsearch:9200", "--span-storage.type=elasticsearch", "--log-level=debug", "--query.static-files=/go/jaeger-ui/"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     environment:
       - SPAN_STORAGE_TYPE=elasticsearch
       - no_proxy=localhost
@@ -269,7 +287,6 @@ services:
       - "16687"
     ports:
       - "16686:16686"
-    restart: on-failure  
     networks:
       tracing: {}
 
