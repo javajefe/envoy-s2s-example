@@ -195,7 +195,8 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
-    container_name: elasticsearch
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -212,7 +213,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:9200"]
       interval: 20s
       timeout: 5s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   kibana:
@@ -297,3 +298,7 @@ networks:
   servicepod2: {}
   servicepod2a: {}
   tracing: {}
+
+volumes:
+  esdata:
+    driver: local
