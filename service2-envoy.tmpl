@@ -40,6 +40,7 @@ static_resources:
                 local_service: {value: 100}
           - name: envoy.router
             config:
+              dynamic_stats: {value: true}
               upstream_log:
                 name: envoy.file_access_log
                 config:
@@ -74,6 +75,11 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
+  - name: statsd
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: ROUND_ROBIN
+    hosts: [{ socket_address: { address: "statsd", port_value: 9125 }}]
   - name: xds_cluster
     connect_timeout: 0.25s
     type: strict_dns
@@ -88,9 +94,13 @@ tracing:
     config:
       collector_cluster: jaeger
       collector_endpoint: "/api/v1/spans"
+stats_sinks:
+  name: envoy.statsd
+  config:
+    tcp_cluster_name: statsd
 admin:
   access_log_path: "/dev/null"
   address:
     socket_address:
       address: 0.0.0.0
-      port_value: 8001
+      port_value: 10000

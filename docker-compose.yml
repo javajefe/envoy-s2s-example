@@ -4,7 +4,7 @@ services:
   # --------------------------------------------------
   # Front Proxy
   # --------------------------------------------------
-  front-envoy:
+  envoy-front:
     build:
       context: .
       dockerfile: Dockerfile-envoy
@@ -15,18 +15,38 @@ services:
       - SERVICE_CLUSTER=front-proxy
       - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
-      - "80"
-      - "8001"
+      - 80
+      - 10000
     ports:
-      - "8000:80"
-      - "8001:8001"
+      - 8000:80
+      - 10000:10000
     networks:
       envoymesh: {}
+      frontpod:
+        aliases:
+          - local-proxy
+
+
+  envoy-front-statsd-exporter:
+    image: prom/statsd-exporter:v0.6.0
+    volumes:
+      - ./statsd/statsd_exporter.yml:/tmp/statsd_mapping.conf
+    command: ["-statsd.mapping-config=/tmp/statsd_mapping.conf"]
+    expose:
+      - 9102
+      - 9125
+      - 9125/udp
+    networks:
+      envoymesh: {}
+      frontpod:
+        aliases:
+          - statsd
+
 
   # --------------------------------------------------
   # Service 1
   # --------------------------------------------------
-  local-envoy1:
+  envoy-service1:
     build:
       context: .
       dockerfile: Dockerfile-envoy
@@ -37,7 +57,7 @@ services:
       - SERVICE_CLUSTER=service1
       - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
-      - "80"
+      - 80
     networks:
       envoymesh: {}
       servicepod1:
@@ -48,8 +68,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-service
-    depends_on:
-      - local-envoy1
     environment:
       - SERVICE_NAME=1
     networks:
@@ -59,24 +77,36 @@ services:
 
   registrator1:
     image: javajefe/lyft-discovery-registrator
-    depends_on:
-      - local-envoy1
-      - service1
     environment:
       - ENVIRONMENT=DOCKER
       - DISCOVERY_URL=${DISCOVERY_URL}
-      - PROXY_NETWORK_ALIAS=local-envoy1
+      - PROXY_NETWORK_ALIAS=envoy-service1
       - PROXY_HOST_PORT=80
       - SERVICE_NAME=service1
       - REFRESH_INTERVAL=5
     networks:
       envoymesh: {}
 
+  envoy-service1-statsd-exporter:
+    image: prom/statsd-exporter:v0.6.0
+    volumes:
+      - ./statsd/statsd_exporter.yml:/tmp/statsd_mapping.conf
+    command: ["-statsd.mapping-config=/tmp/statsd_mapping.conf"]
+    expose:
+      - 9102
+      - 9125
+      - 9125/udp
+    networks:
+      envoymesh: {}
+      servicepod1:
+        aliases:
+          - statsd
+
 
   # --------------------------------------------------
   # Service 2 (first node)
   # --------------------------------------------------
-  local-envoy2:
+  envoy-service2:
     build:
       context: .
       dockerfile: Dockerfile-envoy
@@ -98,8 +128,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-service
-    depends_on:
-      - local-envoy2
     environment:
       - SERVICE_NAME=2
     networks:
@@ -109,24 +137,36 @@ services:
 
   registrator2:
     image: javajefe/lyft-discovery-registrator
-    depends_on:
-      - local-envoy2
-      - service2
     environment:
       - ENVIRONMENT=DOCKER
       - DISCOVERY_URL=${DISCOVERY_URL}
-      - PROXY_NETWORK_ALIAS=local-envoy2
+      - PROXY_NETWORK_ALIAS=envoy-service2
       - PROXY_HOST_PORT=80
       - SERVICE_NAME=service2
       - REFRESH_INTERVAL=5
     networks:
       envoymesh: {}
 
+  envoy-service2-statsd-exporter:
+    image: prom/statsd-exporter:v0.6.0
+    volumes:
+      - ./statsd/statsd_exporter.yml:/tmp/statsd_mapping.conf
+    command: ["-statsd.mapping-config=/tmp/statsd_mapping.conf"]
+    expose:
+      - 9102
+      - 9125
+      - 9125/udp
+    networks:
+      envoymesh: {}
+      servicepod2:
+        aliases:
+          - statsd
+
 
   # --------------------------------------------------
   # Service 2 (second node)
   # --------------------------------------------------
-  local-envoy2a:
+  envoy-service2a:
     build:
       context: .
       dockerfile: Dockerfile-envoy
@@ -148,8 +188,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-service
-    depends_on:
-      - local-envoy2a
     environment:
       - SERVICE_NAME=2a
     networks:
@@ -159,18 +197,30 @@ services:
 
   registrator2a:
     image: javajefe/lyft-discovery-registrator
-    depends_on:
-      - local-envoy2a
-      - service2a
     environment:
       - ENVIRONMENT=DOCKER
       - DISCOVERY_URL=${DISCOVERY_URL}
-      - PROXY_NETWORK_ALIAS=local-envoy2a
+      - PROXY_NETWORK_ALIAS=envoy-service2a
       - PROXY_HOST_PORT=80
       - SERVICE_NAME=service2
       - REFRESH_INTERVAL=5
     networks:
       envoymesh: {}
+
+  envoy-service2a-statsd-exporter:
+    image: prom/statsd-exporter:v0.6.0
+    volumes:
+      - ./statsd/statsd_exporter.yml:/tmp/statsd_mapping.conf
+    command: ["-statsd.mapping-config=/tmp/statsd_mapping.conf"]
+    expose:
+      - 9102
+      - 9125
+      - 9125/udp
+    networks:
+      envoymesh: {}
+      servicepod2a:
+        aliases:
+          - statsd
 
 
   # --------------------------------------------------
@@ -292,13 +342,69 @@ services:
       tracing: {}
 
 
+  # --------------------------------------------------
+  # Monitoring (Prometheus)
+  # --------------------------------------------------
+
+  prometheus:
+    image: prom/prometheus:v2.3.1
+    container_name: prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    expose:
+      - 9090
+    ports:
+      - 9090:9090
+    networks:
+      - envoymesh
+    labels:
+      org.label-schema.group: "monitoring"
+
+  grafana:
+    image: grafana/grafana:4.6.3
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/datasources
+      - ./grafana/dashboards:/etc/grafana/dashboards
+      - ./grafana/setup.sh:/setup.sh
+    entrypoint: /setup.sh
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    networks:
+      - envoymesh
+    labels:
+      org.label-schema.group: "monitoring"
+
+  # --------------------------------------------------
+  # Docker infrastructure
+  # --------------------------------------------------
+
 networks:
   envoymesh: {}
+  frontpod: {}
   servicepod1: {}
   servicepod2: {}
   servicepod2a: {}
   tracing: {}
 
 volumes:
-  esdata:
-    driver: local
+  esdata: {}
+  prometheus_data: {}
+  grafana_data: {}

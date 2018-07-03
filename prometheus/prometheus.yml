@@ -1,0 +1,52 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  # external_labels:
+  #     monitor: 'docker-host-alpha'
+
+# A scrape configuration containing exactly one endpoint to scrape.
+scrape_configs:
+  - job_name: 'envoy'
+    metrics_path: '/stats/prometheus'
+    params:
+      format: ['prometheus']
+    static_configs:
+    - targets:
+      - "envoy-front:10000"
+      - "envoy-service1:10000"
+      - "envoy-service2:10000"
+      - "envoy-service2a:10000"
+    relabel_configs:
+    - source_labels: ['__address__']
+      regex: 'envoy-(.+?)a?:10000'
+      target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
+      replacement: '$1'
+    - source_labels: ['__address__']
+      regex: 'envoy-(.+):10000'
+      target_label: 'instance' # Overwrite instance to not have the port number in it
+      replacement: '$1'
+    metric_relabel_configs: # We don't like the envoy_ prefixes on label names, they're unnecessary. So strip them.
+    - action: 'labelmap'
+      regex: 'envoy_(.*)'
+      replacement: '$1'
+    - action: 'labeldrop'
+      regex: 'envoy_(.*)'
+  - job_name: 'envoy_statsd' # Histograms have to come from statsd still. Config is the same as above but with port 9102 instead of 9901.
+    static_configs:
+    - targets:
+      - "envoy-front-statsd-exporter:9102"
+      - "envoy-service1-statsd-exporter:9102"
+      - "envoy-service2-statsd-exporter:9102"
+      - "envoy-service2a-statsd-exporter:9102"
+    relabel_configs:
+    - source_labels: ['__address__']
+      regex: 'envoy-(.+?)a?-statsd-exporter:9102'
+      target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
+      replacement: '$1'
+    - source_labels: ['__address__']
+      regex: 'envoy-(.+)-statsd-exporter:9102'
+      target_label: 'instance' # Overwrite instance to not have the port number in it
+      replacement: '$1'
