@@ -16,9 +16,11 @@ services:
       - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
       - 80
+      - 8001
       - 10000
     ports:
       - 8000:80
+      - 8001:8001
       - 10000:10000
     networks:
       envoymesh: {}
@@ -58,6 +60,8 @@ services:
       - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
       - 80
+      - 8001
+      - 10000
     networks:
       envoymesh: {}
       servicepod1:
@@ -117,7 +121,9 @@ services:
       - SERVICE_CLUSTER=service2
       - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
-      - "80"
+      - 80
+      - 8001
+      - 10000
     networks:
       envoymesh: {}
       servicepod2:
@@ -177,7 +183,9 @@ services:
       - SERVICE_CLUSTER=service2
       - DISCOVERY_URL=${DISCOVERY_URL}
     expose:
-      - "80"
+      - 80
+      - 8001
+      - 10000
     networks:
       envoymesh: {}
       servicepod2a:
@@ -232,9 +240,9 @@ services:
       - BACKEND_STORAGE=InMemory
       - APPLICATION_ENV=production
     expose:
-      - "8080"
+      - 8080
     ports:
-      - "8080:8080"
+      - 8080:8080
     networks:
       envoymesh: {}
 
@@ -303,10 +311,10 @@ services:
       - SPAN_STORAGE_TYPE=elasticsearch
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
     expose:
-      - "14269"
-      - "14268"
-      - "14267"
-      - "9411"
+      - 14269
+      - 14268
+      - 14267
+      - 9411
     networks:
       envoymesh: {}
       tracing: {}
@@ -334,10 +342,10 @@ services:
       - SPAN_STORAGE_TYPE=elasticsearch
       - no_proxy=localhost
     expose:
-      - "16686"
-      - "16687"
+      - 16686
+      - 16687
     ports:
-      - "16686:16686"
+      - 16686:16686
     networks:
       tracing: {}
 

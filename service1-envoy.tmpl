@@ -48,6 +48,32 @@ static_resources:
   - address:
       socket_address:
         address: 0.0.0.0
+        port_value: 8001
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          codec_type: auto
+          stat_prefix: ingress_http_metrics
+          route_config:
+            name: metrics
+            virtual_hosts:
+            - name: metrics
+              domains:
+              - "*"
+              routes:
+              # Prefix-based routing with rewrite
+              - match:
+                  prefix: "/statsd"
+                route:
+                  cluster: statsd_in
+                  prefix_rewrite: "/metrics"
+          http_filters:
+          - name: envoy.router
+            config: {}
+  - address:
+      socket_address:
+        address: 0.0.0.0
         port_value: 9000
     filter_chains:
     - filters:
@@ -141,7 +167,12 @@ static_resources:
           cluster_names: [xds_cluster]
           refresh_delay:
             seconds: 5
-  - name: statsd
+  - name: statsd_in
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: ROUND_ROBIN
+    hosts: [{ socket_address: { address: "statsd", port_value: 9102 }}]
+  - name: statsd_out
     connect_timeout: 0.25s
     type: strict_dns
     lb_policy: ROUND_ROBIN
@@ -163,7 +194,7 @@ tracing:
 stats_sinks:
   name: envoy.statsd
   config:
-    tcp_cluster_name: statsd
+    tcp_cluster_name: statsd_out
 admin:
   access_log_path: "/dev/null"
   address:

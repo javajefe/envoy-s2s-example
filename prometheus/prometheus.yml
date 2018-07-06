@@ -35,18 +35,19 @@ scrape_configs:
     - action: 'labeldrop'
       regex: 'envoy_(.*)'
   - job_name: 'envoy_statsd' # Histograms have to come from statsd still. Config is the same as above but with port 9102 instead of 9901.
+    metrics_path: '/statsd'
     static_configs:
     - targets:
-      - "envoy-front-statsd-exporter:9102"
-      - "envoy-service1-statsd-exporter:9102"
-      - "envoy-service2-statsd-exporter:9102"
-      - "envoy-service2a-statsd-exporter:9102"
+      - "envoy-front:8001"
+      - "envoy-service1:8001"
+      - "envoy-service2:8001"
+      - "envoy-service2a:8001"
     relabel_configs:
     - source_labels: ['__address__']
-      regex: 'envoy-(.+?)a?-statsd-exporter:9102'
+      regex: 'envoy-(.+?)a?:8001'
       target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
       replacement: '$1'
     - source_labels: ['__address__']
-      regex: 'envoy-(.+)-statsd-exporter:9102'
+      regex: 'envoy-(.+):8001'
       target_label: 'instance' # Overwrite instance to not have the port number in it
       replacement: '$1'
