@@ -15,19 +15,23 @@ scrape_configs:
       format: ['prometheus']
     static_configs:
     - targets:
-      - "envoy-front:10000"
-      - "envoy-service1:10000"
-      - "envoy-service2:10000"
-      - "envoy-service2a:10000"
-    relabel_configs:
-    - source_labels: ['__address__']
-      regex: 'envoy-(.+?)a?:10000'
-      target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
-      replacement: '$1'
-    - source_labels: ['__address__']
-      regex: 'envoy-(.+):10000'
-      target_label: 'instance' # Overwrite instance to not have the port number in it
-      replacement: '$1'
+      - envoy-front:10000
+      labels:
+        local_cluster: front
+        instance: front
+    file_sd_configs:
+    - files:
+      - "/prometheus_filesd/file_sd_10000.json"
+      refresh_interval: 10s
+    # relabel_configs:
+    # - source_labels: ['__address__']
+    #   regex: 'envoy-(.+?)a?:10000'
+    #   target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
+    #   replacement: '$1'
+    # - source_labels: ['__address__']
+    #   regex: 'envoy-(.+):10000'
+    #   target_label: 'instance' # Overwrite instance to not have the port number in it
+    #   replacement: '$1'
     metric_relabel_configs: # We don't like the envoy_ prefixes on label names, they're unnecessary. So strip them.
     - action: 'labelmap'
       regex: 'envoy_(.*)'
@@ -36,18 +40,22 @@ scrape_configs:
       regex: 'envoy_(.*)'
   - job_name: 'envoy_statsd' # Histograms have to come from statsd still. Config is the same as above but with port 9102 instead of 9901.
     metrics_path: '/statsd'
+    file_sd_configs:
+    - files:
+        - /prometheus_filesd/file_sd_8001.json
+      refresh_interval: 10s
     static_configs:
     - targets:
-      - "envoy-front:8001"
-      - "envoy-service1:8001"
-      - "envoy-service2:8001"
-      - "envoy-service2a:8001"
-    relabel_configs:
-    - source_labels: ['__address__']
-      regex: 'envoy-(.+?)a?:8001'
-      target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
-      replacement: '$1'
-    - source_labels: ['__address__']
-      regex: 'envoy-(.+):8001'
-      target_label: 'instance' # Overwrite instance to not have the port number in it
-      replacement: '$1'
+      - envoy-front:8001
+      labels:
+        local_cluster: front
+        instance: front
+    # relabel_configs:
+    # - source_labels: ['__address__']
+    #   regex: 'envoy-(.+?)a?:8001'
+    #   target_label: 'local_cluster' # Label to identify the type of service of the target host. We pull this from the host name.
+    #   replacement: '$1'
+    # - source_labels: ['__address__']
+    #   regex: 'envoy-(.+):8001'
+    #   target_label: 'instance' # Overwrite instance to not have the port number in it
+    #   replacement: '$1'

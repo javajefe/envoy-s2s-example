@@ -236,6 +236,7 @@ services:
   # --------------------------------------------------
   discovery:
     image: javajefe/lyft-discovery
+    container_name: discovery
     environment:
       - BACKEND_STORAGE=InMemory
       - APPLICATION_ENV=production
@@ -253,6 +254,7 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
+    container_name: elasticsearch
     volumes:
       - esdata:/usr/share/elasticsearch/data
     environment:
@@ -360,6 +362,7 @@ services:
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
+      - prometheus_filesd:/prometheus_filesd:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -376,6 +379,17 @@ services:
       - envoymesh
     labels:
       org.label-schema.group: "monitoring"
+
+  lyft-discovery-prometheus-file-sd:
+    image: javajefe/lyft-discovery-prometheus-file-sd
+    volumes:
+      - prometheus_filesd:/tmp/out
+    environment:
+      - DISCOVERY_URL=http://discovery:8080
+      - SERVICE_REPO_NAME=SRN
+      - REFRESH_INTERVAL=10
+    networks:
+      - envoymesh
 
   grafana:
     image: grafana/grafana:4.6.3
@@ -415,4 +429,5 @@ networks:
 volumes:
   esdata: {}
   prometheus_data: {}
+  prometheus_filesd: {}
   grafana_data: {}
