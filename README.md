@@ -51,22 +51,20 @@ histogram_quantile(0.90, sum(rate(envoy_cluster_upstream_rq_time_bucket{cluster_
 sum(envoy_cluster_membership_healthy) by (cluster_name)
 ```
 
-##### Discovery phase
-![discovery phase](docs/envoy-s2s-example-discovery.png)
+### Tweaking
+- Grafana dashboards are in `./grafana/dashboards` directory
+- Prometheus configuration is in `./prometheus` directory
+- statsd-exporter configuration is in `./statsd` directory
 
-##### API call phase
-![API call phase](docs/envoy-s2s-example-API-call.png)
+##### API call concept
+When you execute http://localhost:8000/trace/1 it goes like this:
+![API call concept](docs/envoy-s2s-example-concept.png)
 
 # How to clean it
 Local docker volumes are used to keep the data between deployment. So if you want to clean up your data, use
 ```
 docker volume rm envoy-s2s-example_esdata envoy-s2s-example_grafana_data envoy-s2s-example_prometheus_data envoy-s2s-example_prometheus_filesd
 ```
-
-### Tweaking
-- Grafana dashboards are in `./grafana/dashboards` directory
-- Prometheus configuration is in `./prometheus` directory
-- statsd-exporter configuration is in `./statsd` directory
 
 # References
 - [original example](https://github.com/envoyproxy/envoy/tree/master/examples/jaeger-tracing) from Envoy team
